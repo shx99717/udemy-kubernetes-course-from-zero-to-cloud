@@ -3,6 +3,9 @@ kind: Pod
 metadata:
   name: grade-submission-portal
   labels:
+    # it is good practice to add prefix to the key to avoid name collisions
+    # https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/
+    # some of the toolings in the kubuernetes relies on the specific name of the labels
     app.kubernetes.io/name: grade-submission
     app.kubernetes.io/component: frontend
     app.kubernetes.io/instance: grade-submission-portal
@@ -11,11 +14,25 @@ spec:
   - name: grade-submission-portal
     image: rslim087/kubernetes-course-grade-submission-portal
     resources:
+      # Requests specify the minimum resources guaranteed to the container.
+      # 200m CPU = 0.2 vCPU (as 1000m equals 1 vCPU), and 128Mi is the memory allocation.
+      # This guarantees at least 20% of one CPU and 128 MiB of memory to the container.
       requests:
         memory: "128Mi"
+        # If the cluster has 16 vCPU, which means totally it has 16000m
+        # I can specify a number like 3200m, which is 3.2 vCPU out of 16 vCPU
         cpu: "200m"
+      # Limits enforce the maximum resources the container can use.
+      # Helps prevent resource starvation for other pods sharing the same node.
       limits:
         memory: "128Mi"
+        # Without setting the limits
+        # - Container can use available CPU on the node
+        # - Pod gets "Burstable" QoS class
+        # - Risk of node resource exhaustion if not monitored
+        # Many organizations now omit limits for CPU (but keep memory limits)
+        # Your workloads are burstable and benefit from spare CPU
+        # cpu: "200m"
     ports:
       - containerPort: 5001  
   - name: grade-submission-portal-health-checker
@@ -26,3 +43,4 @@ spec:
         cpu: "200m"
       limits:
         memory: "128Mi"
+        # cpu: "200m"
