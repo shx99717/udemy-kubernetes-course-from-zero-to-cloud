@@ -1,0 +1,80 @@
+### create the whatever resources defined in the yaml file
+kubectl apply -f .\grade-submission-portal-pod.yaml
+
+### delete the whatever resources defined in the yaml file
+kubectl delete -f .\grade-submission-portal-pod.yaml
+
+### show all pods
+kubectl get pods
+
+### show one specific pod details e.g. all its startup events
+kubectl describe pod grade-submission-portal
+
+### show the logs for the specific pod, if there is only one container in the pod
+kubectl logs grade-submission-portal
+
+### show the logs for the specific pod and follow the logs, if there is only one container in the pod
+kubectl logs -f grade-submission-portal
+
+### show the logs for the specific pod and follow the logs, if there are multiple containers in the pod
+kubectl logs -f grade-submission-portal -c grade-submission-portal
+kubectl logs -f grade-submission-portal -c grade-submission-portal-health-checker
+
+
+### Forward local port 8080 to pod port 5001 for accessing the grade-submission-portal service
+### Access the application at http://localhost:8080
+kubectl port-forward grade-submission-portal 8080:5001
+
+
+### delete the pod by using label filter
+kubectl delete pod -l "app.kubernetes.io/name=grade-submission"
+
+### delete the pod by using name
+kubectl delete pod grade-submission-portal
+
+
+
+
+### Sidecar in Kubernetes (K8s)
+A sidecar is a container that runs alongside a primary container in a pod. It provides additional functionality to the primary container, such as logging, monitoring, or data collection.
+Why Use a Sidecar?
+- Separation of Concerns: Keeps the main app focused on core logic, They enable cross-cutting concerns (logging, security, networking) without app changes.
+- Reusability: The same sidecar (e.g., Istio Proxy) can be attached to multiple apps.
+- No Code Changes: Enhances functionality without modifying the main application.
+Example:
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-app
+spec:
+  containers:
+  - name: main-app  # Primary container
+    image: nginx
+  - name: log-shipper  # Sidecar
+    image: fluentd
+    volumeMounts:
+    - name: logs
+      mountPath: /var/log/nginx
+  volumes:
+  - name: logs
+    emptyDir: {}
+
+What is emptyDir?
+Think of emptyDir as a temporary shared folder that:
+- Is created automatically when the Pod starts
+- Exists only while the Pod is running
+- Is deleted forever when the Pod dies
+- Can be accessed by all containers in the Pod
+[nginx container] → writes logs → /var/log/nginx (inside emptyDir volume)
+                      ↑
+[Fluentd container] ← reads these same logs
+Key Properties
+  | Temporary Storage
+    # Like a "scratch pad" for your Pod
+    # Perfect for temporary files (logs, cache, temp data)
+  | Like a Shared Clipboard
+    # Containers can paste (write) and copy (read) from it
+  | Shared Between Containers
+    # Both nginx and Fluentd can access the same files
+
+
