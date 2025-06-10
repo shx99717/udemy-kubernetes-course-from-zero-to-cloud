@@ -7,6 +7,6 @@ spec:
   selector:
     app.kubernetes.io/instance: grade-submission-portal
   ports:
-  - port: 5001
-    targetPort: 5001
+  - port: 5001  # this is the service port, <service-name>:<service-port>
+    targetPort: 5001 # this is the target port, the matching pod by selector above, with its target port
     nodePort: 32000

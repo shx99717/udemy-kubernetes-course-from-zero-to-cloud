@@ -1,0 +1,55 @@
+### Start the portal pod
+kubectl apply -f grade-submission-portal-pod.yaml
+
+### Start the node port service
+kubectl apply -f grade-submission-portal-service.yaml
+
+### To visit the NodePort mapped by 32000, as we are using minikube, so 
+### I have to minikube ssh into the minikube node first
+### first to get the minikube node ip, e.g. 192.168.49.2
+minikube ip
+minikube ssh
+curl -v http://192.168.49.2:32000
+
+
+### Get all services
+kubectl get svc
+
+---
+A ClusterIP service in Kubernetes is the default type of service that provides a stable, internal IP address and DNS name for communication between pods within the cluster.
+ | is only reachable from inside the Kubernetes cluster (by pods or other services).
+ | Kubernetes assigns a virtual IP address (ClusterIP) from a reserved pool (e.g., 10.96.0.0/12 by default).
+ | The service gets a DNS name in the format: <service-name>.<namespace>.svc.cluster.local
+   e.g. backend-service.default.svc.cluster.local
+ | Traffic sent to the ClusterIP is automatically load-balanced across all healthy pods matching the service’s selector.
+ | When to use it
+   # Inter-Pod Communication POD A talk to POD B
+   # Internal Microservices: For private APIs, databases, or other internal components that shouldn’t be exposed outside the cluster.
+   # Sidecar Proxies: Used by service meshes (e.g., Istio) to route traffic between sidecar containers.
+
+
+Pod-to-Service Communication:
+  | A pod sends a request to http://backend-service:80.
+  | Kubernetes DNS resolves backend-service to the ClusterIP (e.g., 10.96.1.2).
+  | The kube-proxy component on each node routes the traffic to one of the backend pods.
+  | Frontend Pod → ClusterIP (Virtual IP) → kube-proxy → Backend Pod
+  | No External Access: Cannot be accessed from outside the cluster (otherwise, use NodePort/LoadBalancer/Ingress for that).
+
+e.g.
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service  # DNS name: backend-service.default.svc.cluster.local
+spec:
+  type: ClusterIP        # Optional (default if omitted)
+  selector:
+    app: backend         # Targets pods with label `app: backend`
+  ports:
+    - protocol: TCP
+      port: 80           # Service port
+      targetPort: 8080   # Pod port for the matching selector    
+
+
+For your multi-application setup, ClusterIP services are ideal for internal communication, but ensure each app uses either:
+Unique service names (e.g., backend-service-app1), or
+Isolated namespaces (recommended).
