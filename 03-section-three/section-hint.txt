@@ -1,0 +1,90 @@
+--- About namespace
+Kubernetes Namespaces are a fundamental concept used to organize and isolate resources within a cluster. Here are the key takeaways for Kubernetes namespaces:
+
+1. Logical Isolation
+Namespaces provide a way to divide cluster resources into virtual clusters.
+Resources in one namespace are logically separated from resources in another namespace.
+
+2. Resource Scoping
+Most Kubernetes resources (like Pods, Services, Deployments) exist within a specific namespace.
+Some cluster-level resources (like Nodes, PersistentVolumes, or ClusterRoles) are not tied to any namespace.
+
+3. Multi-Tenant Management
+Ideal for multi-user environments where multiple teams or projects share the same cluster.
+Each team can work within their own namespace without interfering with others.
+
+4. Access Control
+You can apply Role-Based Access Control (RBAC) at the namespace level.
+This allows granular permissions—for example, allowing one team full access to a namespace while restricting another.
+
+5. Resource Quotas & Limits
+You can enforce resource quotas (CPU, memory, etc.) per namespace using ResourceQuota objects.
+Ensures fair usage of cluster resources among different users or teams.
+
+6. Scoped Network Policies
+Network policies can be applied within a namespace to control traffic between pods.
+Enhances security by limiting communication to only necessary components.
+
+7. DNS Resolution
+Services in a namespace have DNS names in the format: <service-name>.<namespace>.svc.cluster.local.
+For example, a service named backend in the dev namespace would be reachable at backend.dev.svc.cluster.local.
+
+8. Default Namespace
+If no namespace is specified, Kubernetes uses the default namespace.
+It's best practice to create separate namespaces for different applications or environments (e.g., dev, staging, prod).
+
+
+Question: in each of the namespace, will the same ip address of pod be used?
+No, in Kubernetes, Pod IP addresses are unique across the entire cluster, regardless of the namespace they belong to. Here's a breakdown of how networking works with namespaces and Pod IPs:
+
+Cluster-Wide Unique Pod IPs
+  | Every Pod in a Kubernetes cluster gets its own unique IP address.
+  | This IP is unique across all Pods in the cluster, even if they're in different namespaces.
+
+Namespaces Do Not Affect IP Assignment
+  | The namespace is only a logical boundary for organizing resources (like dev, prod, etc.).
+  | It does not affect the underlying network or Pod IP allocation.
+
+Pod-to-Pod Communication
+  | Pods can communicate with each other directly using their IPs, regardless of which namespace they are in.
+  | For example, a Pod with IP 10.244.1.5 in the dev namespace can be accessed by a Pod in the prod namespace using that same IP.
+  | regarding the pod-to-pod communication, seems the pod in one namespace could talk to the pod in another namespace, which does not really isolate the pod from each other in different namespace, will this be a security concern? how can I solve this problem?
+    # yes, namespaces alone do not provide network-based isolation, this can indeed pose a security concern
+    # A compromised Pod in one namespace could potentially scan and attack Pods in other namespaces.
+    # Sensitive services (e.g., databases, APIs) might be exposed to unintended consumers.
+    # Use Kubernetes NetworkPolicy to restrict traffic based on Labels, namespaces, ports and protocols
+Service DNS Scoping
+  | While Pod IPs are global, Services have DNS names scoped to their namespace.
+    Example: A Service named backend in the dev namespace is accessible via backend.dev.svc.cluster.local.
+  | You can still access Services across namespaces using their fully qualified domain name (FQDN).
+
+Network Plugins Handle IP Assignment
+  | CNI plugins like Calico, Flannel, or Cilium ensure that every Pod gets a unique IP across the cluster.
+  | These plugins manage a flat, cluster-wide network space.
+
+
+--------------
+### To get all namespaces
+kubectl get namespaces
+
+### To get all pods under a given namespace
+kubectl get pods -n default
+
+### delete all pods under a given namespace
+kubectl delete pods --all -n <namespace>
+
+### create a namespace
+kubectl create namespace grade-submission
+
+### apply all configuration under the current directory to the given namespace
+### if all the yaml definition does not specify a namespace inside it, we can specify the namespace via the cli
+kubectl apply -f . -n grade-submission
+
+### delete everything under a given namespace
+kubectl delete namespace <namespace-name>
+
+### apply all configuration under the current directory without specifying the namespace
+### the namespace is defined in the meta information of each resources
+### the namespace should be created beforehand
+kubectl create namespace grade-submission
+kubectl apply -f .

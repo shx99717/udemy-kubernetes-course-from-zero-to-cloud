@@ -13,7 +13,9 @@ curl -v http://192.168.49.2:32000
 
 
 ### Get all services
-kubectl get svc
+kubectl get services
+# or kubectl get svc
+# svc = services
 
 ---
 NodePort Service
@@ -67,3 +69,7 @@ kubectl apply -f .
 
 ### Delete everything in the current directory
 kubectl delete -f .
+
+### get a comma separated list of stuff, e.g. services and pods also by given the namespace
+kubectl get services,pods -n grade-submission
+
