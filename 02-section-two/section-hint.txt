@@ -16,6 +16,12 @@ curl -v http://192.168.49.2:32000
 kubectl get svc
 
 ---
+NodePort Service
+Allows external access to the Kubernetes network by exposing a static port on the node (range: 30000-32767).
+ | The service acts as a proxy by directing the request to a matching pod using a label selector.
+ | The NodePort service is often used when prototyping, rarely in practice.
+
+---
 A ClusterIP service in Kubernetes is the default type of service that provides a stable, internal IP address and DNS name for communication between pods within the cluster.
  | is only reachable from inside the Kubernetes cluster (by pods or other services).
  | Kubernetes assigns a virtual IP address (ClusterIP) from a reserved pool (e.g., 10.96.0.0/12 by default).
@@ -26,6 +32,7 @@ A ClusterIP service in Kubernetes is the default type of service that provides a
    # Inter-Pod Communication POD A talk to POD B
    # Internal Microservices: For private APIs, databases, or other internal components that shouldn’t be exposed outside the cluster.
    # Sidecar Proxies: Used by service meshes (e.g., Istio) to route traffic between sidecar containers.
+ | The service acts as a proxy by directing the request to a matching pod using a label selector.
 
 
 Pod-to-Service Communication:
@@ -53,3 +60,10 @@ spec:
 For your multi-application setup, ClusterIP services are ideal for internal communication, but ensure each app uses either:
 Unique service names (e.g., backend-service-app1), or
 Isolated namespaces (recommended).
+
+
+### Apply everything in the current directory
+kubectl apply -f .
+
+### Delete everything in the current directory
+kubectl delete -f .
